@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Loader2, MapPin, Calendar, Tag, ShieldCheck, MessageCircle, ChevronLeft, ChevronRight, WifiOff, RefreshCw } from 'lucide-react';
+import { MapPin, Calendar, Tag, ShieldCheck, MessageCircle, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ItemDetailsSkeleton } from '../components/Skeletons';
+import { ErrorState } from '../components/ErrorState';
+import { EmptyState } from '../components/EmptyState';
 
 export default function ItemDetails() {
   const { id } = useParams<{ id: string }>();
@@ -36,41 +39,28 @@ export default function ItemDetails() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ItemDetailsSkeleton />
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
-        <div className="bg-red-50 p-4 rounded-full mb-4">
-          <WifiOff className="h-8 w-8 text-red-600" />
-        </div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Connection Issue</h2>
-        <p className="text-gray-500 max-w-md mb-6">
-          We couldn't connect to the server to load this item. Please check your internet connection and try again.
-        </p>
-        <button
-          onClick={() => refetch()}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Retry Connection
-        </button>
-      </div>
-    );
+    return <ErrorState onRetry={() => refetch()} fullPage />;
   }
 
   if (!item) {
     return (
-      <div className="text-center py-24">
-        <h2 className="text-2xl font-bold text-gray-900">Item not found</h2>
-        <p className="mt-2 text-gray-600">The item you're looking for doesn't exist or has been removed.</p>
-        <Link to="/browse" className="mt-6 inline-block text-blue-600 hover:text-blue-500">
-          Back to Browse
-        </Link>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <EmptyState
+          icon={Search}
+          title="Item not found"
+          description="The item you're looking for doesn't exist or has been removed."
+          action={{
+            label: "Back to Browse",
+            href: "/browse"
+          }}
+        />
       </div>
     );
   }

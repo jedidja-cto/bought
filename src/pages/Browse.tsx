@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Loader2, Search, Filter, X, WifiOff, RefreshCw } from 'lucide-react';
+import { Search, Filter, X, ShoppingBag } from 'lucide-react';
+import { ItemCardSkeleton } from '../components/Skeletons';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LazyImage } from '../components/LazyImage';
 
 interface Category {
   slug: string;
@@ -86,24 +90,7 @@ export default function Browse() {
   };
 
   if (isCategoriesError || isItemsError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
-        <div className="bg-red-50 p-4 rounded-full mb-4">
-          <WifiOff className="h-8 w-8 text-red-600" />
-        </div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Connection Issue</h2>
-        <p className="text-gray-500 max-w-md mb-6">
-          We couldn't connect to the server. Please check your internet connection and try again.
-        </p>
-        <button
-          onClick={handleRetry}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Retry Connection
-        </button>
-      </div>
-    );
+    return <ErrorState onRetry={handleRetry} fullPage />;
   }
 
   const updateFilters = (newFilters: Partial<typeof filters>) => {
@@ -146,6 +133,7 @@ export default function Browse() {
         <div className="pt-12 lg:grid lg:grid-cols-3 lg:gap-x-8 xl:grid-cols-4">
           {/* Filters Sidebar (Desktop) */}
           <aside className="hidden lg:block">
+            {/* ... Sidebar content unchanged ... */}
             <h3 className="sr-only">Categories</h3>
             <div className="space-y-6">
               <div>
@@ -309,8 +297,10 @@ export default function Browse() {
           {/* Product Grid */}
           <div className="mt-6 lg:mt-0 lg:col-span-2 xl:col-span-3">
             {isLoading ? (
-              <div className="flex justify-center py-24">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8">
+                 {Array.from({ length: 6 }).map((_, i) => (
+                  <ItemCardSkeleton key={i} />
+                ))}
               </div>
             ) : items && items.length > 0 ? (
               <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8">
@@ -318,7 +308,7 @@ export default function Browse() {
                   <Link key={item.id} to={`/item/${item.id}`} className="group relative">
                     <div className="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none">
                       {item.images && item.images[0] ? (
-                        <img
+                        <LazyImage
                           src={item.images[0].url}
                           alt={item.title}
                           className="w-full h-full object-center object-cover lg:w-full lg:h-full"
@@ -348,18 +338,15 @@ export default function Browse() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-24 border-2 border-dashed border-gray-300 rounded-lg">
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No items found</h3>
-                <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
-                <div className="mt-6">
-                  <button
-                    onClick={clearFilters}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
+              <EmptyState
+                icon={ShoppingBag}
+                title="No items found"
+                description="Try adjusting your search or filters."
+                action={{
+                  label: "Clear Filters",
+                  onClick: clearFilters
+                }}
+              />
             )}
           </div>
         </div>

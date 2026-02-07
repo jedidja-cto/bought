@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Loader2, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { compressImage } from '../lib/imageCompression';
 
 interface Category {
   slug: string;
@@ -51,13 +52,25 @@ export default function Sell() {
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setImages((prev) => [...prev, ...newFiles]);
-
+      
+      // Create previews immediately for better UX
       const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
       setPreviews((prev) => [...prev, ...newPreviews]);
+      
+      // Compress images
+      try {
+        const compressedFiles = await Promise.all(
+          newFiles.map(file => compressImage(file))
+        );
+        setImages((prev) => [...prev, ...compressedFiles]);
+      } catch (err) {
+        console.error('Image compression failed', err);
+        // Fallback to original files if compression fails
+        setImages((prev) => [...prev, ...newFiles]);
+      }
     }
   };
 
