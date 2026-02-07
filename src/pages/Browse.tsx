@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Loader2, Search, Filter, X } from 'lucide-react';
+import { Loader2, Search, Filter, X, WifiOff, RefreshCw } from 'lucide-react';
 
 interface Category {
   slug: string;
@@ -36,7 +36,7 @@ export default function Browse() {
     });
   }, [searchParams]);
 
-  const { data: categories } = useQuery({
+  const { data: categories, isError: isCategoriesError, refetch: refetchCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -49,7 +49,7 @@ export default function Browse() {
     },
   });
 
-  const { data: items, isLoading } = useQuery({
+  const { data: items, isLoading, isError: isItemsError, refetch: refetchItems } = useQuery({
     queryKey: ['browse', filters],
     queryFn: async () => {
       let query = supabase
@@ -79,6 +79,32 @@ export default function Browse() {
       return data;
     },
   });
+
+  const handleRetry = () => {
+    refetchCategories();
+    refetchItems();
+  };
+
+  if (isCategoriesError || isItemsError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
+        <div className="bg-red-50 p-4 rounded-full mb-4">
+          <WifiOff className="h-8 w-8 text-red-600" />
+        </div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Connection Issue</h2>
+        <p className="text-gray-500 max-w-md mb-6">
+          We couldn't connect to the server. Please check your internet connection and try again.
+        </p>
+        <button
+          onClick={handleRetry}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Retry Connection
+        </button>
+      </div>
+    );
+  }
 
   const updateFilters = (newFilters: Partial<typeof filters>) => {
     const updated = { ...filters, ...newFilters };

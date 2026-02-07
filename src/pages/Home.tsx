@@ -31,7 +31,7 @@ const DynamicIcon = ({ name, className }: { name: string; className?: string }) 
 };
 
 export default function Home() {
-  const { data: categories, isLoading: isCategoriesLoading } = useQuery({
+  const { data: categories, isLoading: isCategoriesLoading, isError: isCategoriesError, refetch: refetchCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -44,7 +44,7 @@ export default function Home() {
     },
   });
 
-  const { data: featuredItems, isLoading: isItemsLoading } = useQuery({
+  const { data: featuredItems, isLoading: isItemsLoading, isError: isItemsError, refetch: refetchItems } = useQuery({
     queryKey: ['featuredItems'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -65,6 +65,32 @@ export default function Home() {
       return data as any[]; // Type assertion needed for nested join
     },
   });
+
+  const handleRetry = () => {
+    refetchCategories();
+    refetchItems();
+  };
+
+  if (isCategoriesError || isItemsError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
+        <div className="bg-red-50 p-4 rounded-full mb-4">
+          <Icons.WifiOff className="h-8 w-8 text-red-600" />
+        </div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Connection Issue</h2>
+        <p className="text-gray-500 max-w-md mb-6">
+          We couldn't connect to the server. Please check your internet connection and try again.
+        </p>
+        <button
+          onClick={handleRetry}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <Icons.RefreshCw className="mr-2 h-4 w-4" />
+          Retry Connection
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12">

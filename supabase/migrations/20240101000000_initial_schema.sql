@@ -155,8 +155,5 @@ CREATE POLICY "Authenticated users can upload images" ON storage.objects FOR INS
     bucket_id = 'item-images' AND auth.role() = 'authenticated'
 );
 
--- Grant permissions (Fix for permission denied errors)
-GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
-GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated;
+-- Permissions are handled in a separate secure migration
+
