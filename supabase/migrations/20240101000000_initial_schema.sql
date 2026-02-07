@@ -155,5 +155,7 @@ CREATE POLICY "Authenticated users can upload images" ON storage.objects FOR INS
     bucket_id = 'item-images' AND auth.role() = 'authenticated'
 );
 
--- Permissions are handled in a separate secure migration
+-- Grant permissions (Fix for permission denied errors)
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+-- Removed dangerous blanket GRANTs. RLS policies handle access control.
 
